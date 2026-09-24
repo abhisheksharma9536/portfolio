@@ -130,17 +130,20 @@ Set in [`next.config.ts`](next.config.ts): CSP, HSTS, `X-Frame-Options: DENY`, `
 `Permissions-Policy`. The CSP allows `'unsafe-inline'` scripts because Next.js hydration data, the pre-paint theme script and
 JSON-LD are inline. A nonce-based CSP would force every page to render dynamically, trading away the static performance above.
 
-## Deploying to GitHub Pages (current)
+## Deploying to GitHub Pages (live)
 
-[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) runs on every push: install → typecheck, lint and tests →
-`npm run build:static` → publish to GitHub Pages at **https://abhisheksharma9536.github.io/portfolio/**.
+**Live site:** https://abhisheksharma9536.github.io/portfolio/
+
+[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) runs on every push to the working branch: install →
+typecheck, lint and tests → `npm run build:static` → publish `out/` to the **`gh-pages`** branch, which GitHub Pages serves.
 
 The static build ([`scripts/build-static.mjs`](scripts/build-static.mjs)) exports every page under the `/portfolio` base path.
-API routes can't be exported, so the assistant uses the local engine and the contact form uses the relay. GitHub Pages can't set
-custom headers, so the CSP and other security headers apply only on Vercel.
+API routes can't be exported, so the assistant uses the local engine and the contact form uses the relay. The script also gives
+the generated icons and social images `.png` names so static hosts serve the right content type. GitHub Pages can't set custom
+headers, so the CSP and other security headers apply only on Vercel.
 
-If the first run fails at "Configure GitHub Pages", enable Pages once under **Settings → Pages → Build and deployment → Source:
-GitHub Actions**, then re-run the workflow.
+Pages is configured as **Settings → Pages → Deploy from a branch → `gh-pages` / root**. Don't hand-edit the `gh-pages` branch:
+every deploy replaces its contents.
 
 ## Deploying to Vercel
 
