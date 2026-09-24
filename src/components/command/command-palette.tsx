@@ -59,7 +59,7 @@ export default function CommandPalette({ open, onClose }: { open: boolean; onClo
       },
       {
         id: "ask",
-        label: "Ask Abhishek (AI assistant)",
+        label: "Ask Abhishek (assistant)",
         group: "Actions",
         icon: <Sparkles size={16} />,
         keywords: "chat ai question claude",

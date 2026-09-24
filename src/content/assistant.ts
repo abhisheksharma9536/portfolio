@@ -1,9 +1,18 @@
+import { assistantProvider } from "@/lib/deployment";
+
+const usesAi = assistantProvider === "claude";
+
 export const assistantCopy = {
   name: "Ask Abhishek",
   subtitle: "Ask me about my experience, projects & engineering work.",
-  intro:
-    "I'm an AI assistant that answers questions about Abhishek's experience, projects and skills — using only what's in his portfolio.",
-  disclaimer: "AI-generated from Abhishek's portfolio. Can make mistakes.",
+  /** Only the Claude-backed variant is described as AI. */
+  isAi: usesAi,
+  intro: usesAi
+    ? "I'm an AI assistant that answers questions about Abhishek's experience, projects and skills, using only what's in his portfolio."
+    : "I answer questions about Abhishek's experience, projects and skills, using only what's in his portfolio.",
+  disclaimer: usesAi
+    ? "AI-generated from Abhishek's portfolio. Can make mistakes."
+    : "Answers come only from Abhishek's portfolio content.",
 };
 
 export const suggestedQuestions = [

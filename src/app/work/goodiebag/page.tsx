@@ -426,7 +426,7 @@ export default function GoodieBagCaseStudy() {
                 <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-line p-5 sm:flex-row sm:items-center sm:justify-between">
                   <p className="max-w-xl text-sm leading-relaxed text-muted">
                     The <span className="text-fg">Ask Abhishek</span> assistant on this site is a separate, smaller
-                    build on the same API: server-side Claude calls grounded in a structured knowledge base.
+                    build: it answers only from a structured knowledge base generated from this portfolio&apos;s content.
                   </p>
                   <AskButton question="What AI experience does Abhishek have?" className="shrink-0">
                     Try it

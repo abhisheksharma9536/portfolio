@@ -10,6 +10,7 @@ import {
   type ContactField,
 } from "@/lib/validation/contact";
 import { profile } from "@/content/profile";
+import { sendContactMessage } from "@/lib/contact/send";
 import { AlertCircle, ArrowRight, Check } from "@/components/ui/icons";
 import { buttonClass, cn } from "@/components/ui/primitives";
 
@@ -59,29 +60,22 @@ export function ContactForm() {
 
     setStatus({ state: "submitting" });
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...input, website: data.get("website"), startedAt }),
+      const result = await sendContactMessage(input, {
+        website: String(data.get("website") ?? ""),
+        startedAt,
       });
-      const result = (await response.json().catch(() => null)) as
-        | { ok: boolean; error?: string; fields?: ContactErrors }
-        | null;
-      if (response.ok && result?.ok) {
+      if (result.ok) {
         setStatus({ state: "success" });
         form.reset();
         setMessageLength(0);
         return;
       }
-      if (result?.fields) setErrors(result.fields);
-      setStatus({
-        state: "error",
-        message: result?.error ?? "Something went wrong. Please try again.",
-      });
+      if (result.fields) setErrors(result.fields);
+      setStatus({ state: "error", message: result.error });
     } catch {
       setStatus({
         state: "error",
-        message: "Network error — please check your connection and try again.",
+        message: "Network error — please check your connection and try again, or email me directly:",
       });
     }
   }

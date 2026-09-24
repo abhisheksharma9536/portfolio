@@ -1,5 +1,7 @@
 import { renderOgImage, ogSize } from "@/lib/og";
 
+export const dynamic = "force-static";
+
 export const alt = "GoodieBag case study by Abhishek Sharma — surplus food marketplace on iOS, Android and web";
 export const size = ogSize;
 export const contentType = "image/png";

@@ -39,6 +39,14 @@ function renderInline(text: string, onNavigate?: () => void): ReactNode[] {
       const href = safeHref(link[2]);
       if (!href) return link[1];
       const className = "font-medium text-accent underline decoration-accent/30 underline-offset-2 hover:decoration-accent";
+      if (href.endsWith(".pdf")) {
+        // Static files (already base-path aware) open directly, not via client routing.
+        return (
+          <a key={i} href={href} target="_blank" rel="noopener noreferrer" className={className}>
+            {link[1]}
+          </a>
+        );
+      }
       if (href.startsWith("/") || href.startsWith("#")) {
         return (
           <Link key={i} href={href} className={className} onClick={onNavigate}>

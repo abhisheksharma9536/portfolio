@@ -5,6 +5,8 @@
  * fact here updates both the website and the assistant.
  */
 
+import { withBasePath } from "@/lib/deployment";
+
 export const profile = {
   name: "Abhishek Sharma",
   firstName: "Abhishek",
@@ -33,7 +35,7 @@ export const profile = {
     linkedin: "https://www.linkedin.com/in/abhishek-sharma-a861101b5/",
   },
   resume: {
-    href: "/Abhishek-Sharma-Resume.pdf",
+    href: withBasePath("/Abhishek-Sharma-Resume.pdf"),
     downloadName: "Abhishek-Sharma-Resume.pdf",
   },
   /** One-sentence summary used for meta descriptions and the assistant. */

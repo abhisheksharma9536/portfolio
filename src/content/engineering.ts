@@ -59,7 +59,7 @@ export const engineeringTopics: EngineeringTopic[] = [
   {
     id: "ai",
     title: "AI & LLM integration",
-    body: "LLM features built as real services, not demos. The GoodieBag chatbot is a FastAPI service on the Anthropic Claude API, wired into the backend and the app to answer customer and partner queries. The assistant on this site follows the same principle: server-side Claude API calls, grounded in a structured knowledge base.",
+    body: "LLM features built as real services, not demos. The GoodieBag chatbot is a FastAPI service on the Anthropic Claude API, wired into the backend and the app to answer customer and partner queries. The assistant on this site follows the same grounding principle: it answers only from a structured knowledge base built from this portfolio's content.",
     evidence: [
       "AI chatbot service for customer and partner queries",
       "Three Claude Academy certifications (2026)",

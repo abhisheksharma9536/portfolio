@@ -120,9 +120,11 @@ export default function AssistantPanel({ open, onClose, pendingQuestion, onPendi
         <div className="min-w-0 flex-1">
           <h2 id={titleId} className="flex items-center gap-2 text-[0.95rem] font-semibold tracking-tight">
             {assistantCopy.name}
-            <span className="rounded-full border border-accent/30 bg-accent-soft px-1.5 py-px font-mono text-[0.6rem] font-medium uppercase tracking-wider text-accent">
-              AI
-            </span>
+            {assistantCopy.isAi ? (
+              <span className="rounded-full border border-accent/30 bg-accent-soft px-1.5 py-px font-mono text-[0.6rem] font-medium uppercase tracking-wider text-accent">
+                AI
+              </span>
+            ) : null}
           </h2>
           <p className="text-xs leading-snug text-muted">{assistantCopy.subtitle}</p>
         </div>
@@ -260,7 +262,7 @@ export default function AssistantPanel({ open, onClose, pendingQuestion, onPendi
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Ask about GoodieBag, AWS, AI work…"
-            className="max-h-[8.5rem] flex-1 resize-none bg-transparent py-2 text-[0.92rem] leading-snug text-fg outline-none placeholder:text-faint"
+            className="max-h-[8.5rem] flex-1 resize-none bg-transparent py-2 text-[0.92rem] leading-snug text-fg outline-none placeholder:text-faint focus-visible:outline-none"
           />
           {pending ? (
             <button

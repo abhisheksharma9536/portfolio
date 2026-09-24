@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CHAT_LIMITS, type ChatMessage, type ChatStreamEvent } from "@/lib/ai/protocol";
+import { assistantProvider } from "@/lib/deployment";
 
 export type UiMessage = {
   id: string;
@@ -90,6 +91,89 @@ async function readError(response: Response): Promise<ChatRequestError> {
   return new ChatRequestError(data?.error ?? "The assistant couldn't answer right now.", retryable);
 }
 
+const sleep = (ms: number, signal: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    if (signal.aborted) return reject(new DOMException("Aborted", "AbortError"));
+    const timer = setTimeout(resolve, ms);
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer);
+        reject(new DOMException("Aborted", "AbortError"));
+      },
+      { once: true },
+    );
+  });
+
+/**
+ * Answers from the local knowledge engine (no network, no AI service) and
+ * reveals the reply progressively so it reads like the streamed variant.
+ */
+async function answerLocally(
+  history: UiMessage[],
+  onText: (text: string) => void,
+  signal: AbortSignal,
+): Promise<boolean> {
+  const { answerQuestion } = await import("@/lib/assistant/engine");
+  const payload = toPayload(history);
+  const question = payload[payload.length - 1]?.content ?? "";
+  const answer = answerQuestion(question, payload.slice(0, -1));
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    onText(answer);
+    return true;
+  }
+  await sleep(380, signal);
+  const words = answer.match(/\S+\s*/g) ?? [answer];
+  let shown = "";
+  for (let i = 0; i < words.length; i += 3) {
+    shown += words.slice(i, i + 3).join("");
+    onText(shown);
+    await sleep(22, signal);
+  }
+  return true;
+}
+
+/** Streams an answer from /api/chat (Claude API, server deployments only). */
+async function streamFromApi(
+  history: UiMessage[],
+  onText: (text: string) => void,
+  signal: AbortSignal,
+): Promise<boolean> {
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: toPayload(history) }),
+    signal,
+  });
+  if (!response.ok || !response.body) throw await readError(response);
+
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+  let text = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) return false;
+    buffer += value;
+    let newline: number;
+    while ((newline = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, newline).trim();
+      buffer = buffer.slice(newline + 1);
+      if (!line) continue;
+      const event = JSON.parse(line) as ChatStreamEvent;
+      if (event.type === "delta") {
+        text += event.text;
+        onText(text);
+      } else if (event.type === "error") {
+        throw new ChatRequestError(event.message, event.retryable, event.discardPartial);
+      } else if (event.type === "done") {
+        if (event.truncated) onText(`${text}\n\n…`);
+        return true;
+      }
+    }
+  }
+}
+
 export function useChat() {
   const [messages, setMessages] = useState<UiMessage[]>(loadSession);
   const [error, setError] = useState<ChatError | null>(null);
@@ -119,38 +203,14 @@ export function useChat() {
 
     let text = "";
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: toPayload(history) }),
-        signal: controller.signal,
-      });
-      if (!response.ok || !response.body) throw await readError(response);
-
-      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
-      let buffer = "";
-      let finished = false;
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += value;
-        let newline: number;
-        while ((newline = buffer.indexOf("\n")) >= 0) {
-          const line = buffer.slice(0, newline).trim();
-          buffer = buffer.slice(newline + 1);
-          if (!line) continue;
-          const event = JSON.parse(line) as ChatStreamEvent;
-          if (event.type === "delta") {
-            text += event.text;
-            patchAssistant({ content: text });
-          } else if (event.type === "error") {
-            throw new ChatRequestError(event.message, event.retryable, event.discardPartial);
-          } else if (event.type === "done") {
-            finished = true;
-            if (event.truncated) text += "\n\n…";
-          }
-        }
-      }
+      const onText = (next: string) => {
+        text = next;
+        patchAssistant({ content: text });
+      };
+      const finished =
+        assistantProvider === "local"
+          ? await answerLocally(history, onText, controller.signal)
+          : await streamFromApi(history, onText, controller.signal);
       if (!finished) throw new ChatRequestError("The answer was interrupted. Please try again.", true, true);
       if (!text.trim()) throw new ChatRequestError("The assistant returned an empty answer.", true);
       patchAssistant({ content: text, streaming: false });

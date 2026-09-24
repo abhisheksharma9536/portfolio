@@ -61,7 +61,7 @@ export function AssistantLauncher() {
         onPointerEnter={() => void loadPanel()}
         onFocus={() => void loadPanel()}
         aria-haspopup="dialog"
-        aria-label={compact ? `${assistantCopy.name} — AI assistant` : undefined}
+        aria-label={compact ? `${assistantCopy.name} — portfolio assistant` : undefined}
         aria-expanded={open}
         className={cn(
           "group fixed bottom-4 right-4 z-40 flex items-center rounded-full border border-line bg-surface/90 p-1.5 shadow-lifted backdrop-blur-xl transition-[transform,opacity,border-color] duration-300 hover:-translate-y-0.5 hover:border-accent/40 sm:bottom-6 sm:right-6",
@@ -81,7 +81,7 @@ export function AssistantLauncher() {
         >
           <span className="min-w-0 whitespace-nowrap">
             <span className="block text-[0.86rem] font-semibold tracking-tight">{assistantCopy.name}</span>
-            <span className="hidden text-[0.68rem] text-muted sm:block">AI · answers from my portfolio</span>
+            <span className="hidden text-[0.68rem] text-muted sm:block">Answers from my portfolio</span>
           </span>
         </span>
       </button>

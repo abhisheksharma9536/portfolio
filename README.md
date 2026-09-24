@@ -2,10 +2,11 @@
 
 Personal portfolio of **Abhishek Sharma, Full Stack Developer** (4+ years; backend, cloud, integrations, mobile and AI/LLM work).
 It is a production Next.js app with a GoodieBag case study, interactive architecture visualizations, a working contact form and
-**Ask Abhishek**, an AI assistant built on the Anthropic Claude API that answers only from portfolio content.
+**Ask Abhishek**, an assistant that answers questions about Abhishek's work using only portfolio content. By default it needs no
+AI API; the Claude API can be switched on later.
 
 - **Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · Anthropic TypeScript SDK
-- **Hosting:** Vercel, functions pinned to Mumbai (`bom1`)
+- **Hosting:** GitHub Pages (static build, deployed by GitHub Actions) and/or Vercel (full build, functions pinned to Mumbai `bom1`)
 - **No database.** Nothing on the site needs persistent application data: contact messages are delivered by email, and chat
   history lives in the visitor's own tab (`sessionStorage`). Adding PostgreSQL would be infrastructure without a job.
 
@@ -22,8 +23,9 @@ Every personal fact lives in typed modules under [`src/content/`](src/content), 
 | `metrics.ts` | The only metrics on the site — each with its scope (Career / GoodieBag / Code Analyzer) |
 | `skills.ts`, `engineering.ts`, `credentials.ts`, `assistant.ts` | Skills, engineering topics, certifications/awards/education, assistant copy |
 
-The website **and** the AI assistant's knowledge base ([`src/lib/ai/knowledge.ts`](src/lib/ai/knowledge.ts)) are generated from
-these files, so they can't disagree. To update the portfolio, edit the content files, not the components.
+The website **and** the assistant (both the local engine in [`src/lib/assistant/engine.ts`](src/lib/assistant/engine.ts) and the
+optional Claude knowledge base in [`src/lib/ai/knowledge.ts`](src/lib/ai/knowledge.ts)) read these files, so they can't disagree.
+To update the portfolio, edit the content files, not the components.
 
 ## Local development
 
@@ -36,9 +38,10 @@ npm run dev                  # http://localhost:3000
 | Script | What it does |
 | --- | --- |
 | `npm run dev` / `build` / `start` | Next.js dev server, production build, production server |
+| `npm run build:static` | Static export to `out/` for GitHub Pages (see below) |
 | `npm run lint` | ESLint (Next.js core-web-vitals + TypeScript rules) |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm test` | Unit tests for request/contact validation (Node's built-in test runner, no extra deps) |
+| `npm test` | Unit tests: assistant engine, request and contact validation (Node's built-in test runner, no extra deps) |
 | `npm run check` | typecheck + lint + tests |
 
 Node.js 22.18+ is required (the tests use Node's native TypeScript support).
@@ -49,10 +52,11 @@ All secrets are server-side only; nothing is prefixed `NEXT_PUBLIC_` except the 
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | For the assistant | Claude API key. Without it `/api/chat` returns a clear 503 and the UI says the assistant is unavailable. |
+| `NEXT_PUBLIC_ASSISTANT_PROVIDER` | No | `local` (default: no AI API) or `claude` (server deployments only). |
+| `ANTHROPIC_API_KEY` | Only with `claude` | Claude API key for `/api/chat`. |
 | `ANTHROPIC_MODEL` | No | Defaults to `claude-opus-5`. |
 | `ANTHROPIC_EFFORT` | No | `low` (default), `medium` or `high`. Low keeps grounded answers fast and inexpensive. |
-| `RESEND_API_KEY` | For the contact form | [Resend](https://resend.com) API key used to deliver messages. |
+| `RESEND_API_KEY` | No | [Resend](https://resend.com) API key. Without it the form uses the email relay described below. |
 | `CONTACT_TO_EMAIL` | No | Recipient. Defaults to `abhisheksharma0265@gmail.com`. |
 | `CONTACT_FROM_EMAIL` | No | Sender. Defaults to `Portfolio Contact <onboarding@resend.dev>` (see below). |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | No | Shared rate limiting across serverless instances. Without them limits are per instance, in memory. |
@@ -60,7 +64,21 @@ All secrets are server-side only; nothing is prefixed `NEXT_PUBLIC_` except the 
 
 ## How the main features work
 
-### Ask Abhishek (AI assistant)
+### Ask Abhishek
+
+**Default: local engine, no AI API.** [`src/lib/assistant/engine.ts`](src/lib/assistant/engine.ts) runs in the browser. It matches
+the question to a topic (weighted keywords, follow-ups such as "tell me more") and answers from the content modules, so every
+personal fact it states is on the site. It also:
+
+- replies *"I don't have that information in Abhishek's portfolio."* for things the portfolio doesn't cover (salary, notice
+  period, availability, team sizes) and for technologies it doesn't list (e.g. Kubernetes, TypeScript), then points to the
+  closest real experience;
+- labels general explanations ("What is a webhook?") as **general knowledge**, separate from Abhishek's experience;
+- declines unrelated tasks, and is covered by unit tests in [`tests/assistant-engine.test.ts`](tests/assistant-engine.test.ts).
+
+In this mode nothing in the UI claims to be AI. The engine loads with the chat panel on first use and costs nothing to run.
+
+**Optional: Claude API** (server deployments). Set `NEXT_PUBLIC_ASSISTANT_PROVIDER=claude` and `ANTHROPIC_API_KEY`:
 
 - `POST /api/chat` ([route](src/app/api/chat/route.ts)) calls the Claude API **server-side** with the Anthropic SDK and streams
   the answer back as newline-delimited JSON (`delta` / `done` / `error` events).
@@ -78,6 +96,10 @@ All secrets are server-side only; nothing is prefixed `NEXT_PUBLIC_` except the 
 
 ### Contact form
 
+- **Delivery:** on a server deployment with `RESEND_API_KEY`, messages go through `POST /api/contact` (Resend). On the static
+  GitHub Pages build, or when Resend isn't configured, the browser posts to the keyless [FormSubmit](https://formsubmit.co) relay
+  for `abhisheksharma0265@gmail.com` ([`src/lib/contact/send.ts`](src/lib/contact/send.ts)). FormSubmit needs a **one-time
+  activation**: open the "Activate Form" email it sends to that inbox. Until then the form tells visitors to email directly.
 - `POST /api/contact` ([route](src/app/api/contact/route.ts)) validates with the same module the browser uses
   ([`src/lib/validation/contact.ts`](src/lib/validation/contact.ts)), then delivers via the Resend HTTP API with `reply_to` set
   to the sender. All user input is HTML-escaped in the email.
@@ -94,7 +116,7 @@ All secrets are server-side only; nothing is prefixed `NEXT_PUBLIC_` except the 
   panel and ⌘K command palette load on first use.
 - Section reveals use CSS scroll-driven animations (no JS). Every animation respects `prefers-reduced-motion`.
 - Fonts are self-hosted via `next/font`. The theme (light / dark / system, persisted) is applied before first paint.
-- Local Lighthouse (production build): Performance 96–100, Accessibility 100, Best Practices 100, SEO 100 on the homepage and
+- Local Lighthouse (production build): Performance 95–100, Accessibility 100, Best Practices 100, SEO 100 on the homepage and
   the case study. axe-core reports no WCAG 2.2 AA violations in either theme.
 
 ### SEO
@@ -108,11 +130,24 @@ Set in [`next.config.ts`](next.config.ts): CSP, HSTS, `X-Frame-Options: DENY`, `
 `Permissions-Policy`. The CSP allows `'unsafe-inline'` scripts because Next.js hydration data, the pre-paint theme script and
 JSON-LD are inline. A nonce-based CSP would force every page to render dynamically, trading away the static performance above.
 
+## Deploying to GitHub Pages (current)
+
+[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) runs on every push: install → typecheck, lint and tests →
+`npm run build:static` → publish to GitHub Pages at **https://abhisheksharma9536.github.io/portfolio/**.
+
+The static build ([`scripts/build-static.mjs`](scripts/build-static.mjs)) exports every page under the `/portfolio` base path.
+API routes can't be exported, so the assistant uses the local engine and the contact form uses the relay. GitHub Pages can't set
+custom headers, so the CSP and other security headers apply only on Vercel.
+
+If the first run fails at "Configure GitHub Pages", enable Pages once under **Settings → Pages → Build and deployment → Source:
+GitHub Actions**, then re-run the workflow.
+
 ## Deploying to Vercel
 
 1. Import `abhisheksharma9536/portfolio` at [vercel.com/new](https://vercel.com/new). The framework is detected as Next.js; no
    build settings need changing.
-2. Add the environment variables above (at minimum `ANTHROPIC_API_KEY` and `RESEND_API_KEY`) for **Production** and **Preview**.
+2. Optionally add environment variables (`RESEND_API_KEY` for Resend delivery; `NEXT_PUBLIC_ASSISTANT_PROVIDER=claude` plus
+   `ANTHROPIC_API_KEY` to switch the assistant to Claude). Everything works without them.
 3. Deploy. [`vercel.json`](vercel.json) pins serverless functions to **`bom1` (Mumbai)**. Static pages are served from Vercel's
    global CDN regardless of region.
 4. Optional: add a custom domain under **Project → Settings → Domains**, then set `NEXT_PUBLIC_SITE_URL` to it and redeploy so
@@ -150,8 +185,10 @@ src/
     command/           ⌘K command palette
     layout/ ui/        header, footer, theme toggle, icons, primitives
   content/             all portfolio facts (single source of truth)
-  lib/                 site config, theme, events, AI prompt/knowledge/protocol, server utilities
-tests/                 unit tests
+  lib/                 site/deployment config, assistant engine, contact transport, Claude prompt/knowledge, server utilities
+tests/                 unit tests (+ a tiny loader for the "@/" alias)
+scripts/               static export build for GitHub Pages
+.github/workflows/     GitHub Pages deployment
 assets/fonts/          TTFs used to render Open Graph images
 deploy/                GitHub Pages redirect page
 ```

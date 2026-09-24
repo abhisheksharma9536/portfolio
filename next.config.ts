@@ -14,7 +14,7 @@ function contentSecurityPolicy(isDev: boolean) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://vercel.live https://vercel.com",
     "font-src 'self' data: https://vercel.live https://assets.vercel.com",
-    `connect-src 'self' https://vercel.live wss://ws-us3.pusher.com${isDev ? " ws: wss:" : ""}`,
+    `connect-src 'self' https://formsubmit.co https://vercel.live wss://ws-us3.pusher.com${isDev ? " ws: wss:" : ""}`,
     "frame-src https://vercel.live",
     "frame-ancestors 'none'",
     "object-src 'none'",
@@ -44,6 +44,20 @@ function securityHeaders(isDev: boolean) {
  */
 export default function config(phase: string): NextConfig {
   const isDev = phase === PHASE_DEVELOPMENT_SERVER;
+
+  // Static build for GitHub Pages (see scripts/build-static.mjs): no server,
+  // so no API routes or custom headers; the site lives under a sub-path.
+  if (process.env.NEXT_PUBLIC_STATIC_EXPORT === "true") {
+    const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/+$/, "");
+    return {
+      output: "export",
+      trailingSlash: true,
+      basePath: basePath || undefined,
+      poweredByHeader: false,
+      reactStrictMode: true,
+    };
+  }
+
   return {
     poweredByHeader: false,
     reactStrictMode: true,

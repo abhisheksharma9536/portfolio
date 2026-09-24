@@ -1,5 +1,7 @@
 import { renderOgImage, ogSize } from "@/lib/og";
 
+export const dynamic = "force-static";
+
 export const alt = "Abhishek Sharma — Full Stack Developer: backend, cloud and AI";
 export const size = ogSize;
 export const contentType = "image/png";
