@@ -1,0 +1,454 @@
+@import "tailwindcss";
+
+/* Theme is driven by <html data-theme="light|dark">, set before first paint. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------------------------------------------------------------------------
+   Design tokens
+   Light: warm paper, near-black ink, indigo-violet accent.
+   Dark: deep graphite (not pure black), softened ink, luminous accent.
+--------------------------------------------------------------------------- */
+:root {
+  --bg: #f6f6f2;
+  --surface: #ffffff;
+  --subtle: #efeee9;
+  --fg: #0c0c0f;
+  --muted: #4f4f59;
+  --faint: #6b6b76;
+  --line: rgb(12 12 15 / 0.09);
+  --line-strong: rgb(12 12 15 / 0.16);
+  --accent: #4a3fdc;
+  --accent-2: #7b5cf5;
+  --accent-soft: rgb(74 63 220 / 0.08);
+  --accent-fg: #ffffff;
+  --grid: rgb(12 12 15 / 0.045);
+  --glow-1: rgb(99 88 255 / 0.2);
+  --glow-2: rgb(168 120 255 / 0.14);
+  --success: #0e7a4d;
+  --danger: #b42318;
+  --shadow-color: 240 10% 20%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.06);
+  --shadow-md: 0 1px 2px hsl(var(--shadow-color) / 0.05),
+    0 8px 24px -12px hsl(var(--shadow-color) / 0.18);
+  --shadow-lg: 0 1px 2px hsl(var(--shadow-color) / 0.05),
+    0 24px 60px -24px hsl(var(--shadow-color) / 0.28);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0a0c;
+  --surface: #111115;
+  --subtle: #17171c;
+  --fg: #ececf1;
+  --muted: #a6a6b2;
+  --faint: #8b8b97;
+  --line: rgb(255 255 255 / 0.075);
+  --line-strong: rgb(255 255 255 / 0.14);
+  --accent: #a29bff;
+  --accent-2: #c0a4ff;
+  --accent-soft: rgb(162 155 255 / 0.11);
+  --accent-fg: #0b0a1f;
+  --grid: rgb(255 255 255 / 0.035);
+  --glow-1: rgb(110 96 255 / 0.22);
+  --glow-2: rgb(170 110 255 / 0.13);
+  --success: #4ade9b;
+  --danger: #ff8a80;
+  --shadow-color: 240 30% 2%;
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.4);
+  --shadow-md: 0 1px 2px hsl(var(--shadow-color) / 0.4),
+    0 8px 24px -12px hsl(var(--shadow-color) / 0.7);
+  --shadow-lg: 0 1px 2px hsl(var(--shadow-color) / 0.4),
+    0 24px 60px -24px hsl(var(--shadow-color) / 0.9);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --shadow-soft: var(--shadow-md);
+  --shadow-lifted: var(--shadow-lg);
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+html {
+  scroll-padding-top: 6rem;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 22%, transparent);
+  color: var(--fg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* ---------------------------------------------------------------------------
+   Layout & typography primitives
+--------------------------------------------------------------------------- */
+@utility container-page {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+@utility display {
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.88;
+}
+
+@utility headline {
+  font-size: clamp(2rem, 1.35rem + 2.9vw, 3.6rem);
+  font-weight: 560;
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+@utility serif-accent {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+@utility prose-muted {
+  color: var(--muted);
+  line-height: 1.7;
+  text-wrap: pretty;
+}
+
+@utility hairline {
+  border-color: var(--line);
+}
+
+@utility bg-grid {
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+@utility text-gradient {
+  background: linear-gradient(100deg, var(--accent) 10%, var(--accent-2) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1.1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------------------------------------------------------------------------
+   Motion
+--------------------------------------------------------------------------- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Like rise, but never invisible: the element paints on the first frame so the
+   hero headline counts toward LCP immediately. */
+@keyframes settle {
+  from {
+    transform: translate3d(0, 14px, 0);
+    filter: blur(8px);
+  }
+  to {
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse-travel {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@keyframes ping-soft {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@utility animate-rise {
+  animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+@utility animate-settle {
+  animation: settle 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+@utility animate-fade {
+  animation: fade 1.2s ease both;
+  animation-delay: var(--delay, 0ms);
+}
+
+/* Hero stack visual ------------------------------------------------------- */
+.stack-plane-top {
+  fill: var(--surface);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+  transition: fill 0.4s ease, stroke 0.4s ease;
+}
+.stack-plane-edge {
+  fill: var(--subtle);
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.stack-plane-inner {
+  fill: transparent;
+  stroke: var(--line);
+  stroke-width: 1;
+  transition: fill 0.4s ease, stroke 0.4s ease;
+}
+.stack-label {
+  transition: color 0.4s ease;
+}
+
+@keyframes layer-glow {
+  0%,
+  22%,
+  100% {
+    --glow: 0;
+  }
+  4%,
+  14% {
+    --glow: 1;
+  }
+}
+
+@property --glow {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.stack-layer {
+  animation: layer-glow 7.2s linear infinite;
+  animation-delay: calc(var(--i) * 1.2s);
+}
+.stack-layer .stack-plane-top {
+  fill: color-mix(
+    in oklab,
+    var(--accent) calc(var(--glow) * 16%),
+    var(--surface)
+  );
+  stroke: color-mix(
+    in oklab,
+    var(--accent) calc(var(--glow) * 100%),
+    var(--line-strong)
+  );
+}
+.stack-layer .stack-plane-inner {
+  fill: color-mix(in oklab, var(--accent) calc(var(--glow) * 55%), transparent);
+}
+.stack-layer:hover .stack-plane-top {
+  stroke: var(--accent);
+}
+.stack-layer:hover .stack-label {
+  color: var(--accent);
+}
+
+.stack-pulse {
+  position: absolute;
+  left: calc(2rem - 3px);
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 0 18px 2px var(--accent);
+  animation: pulse-travel 7.2s linear infinite;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stack-pulse {
+    display: none;
+  }
+  .stack-layer {
+    animation: none;
+  }
+}
+
+/* Webhook flow packet ------------------------------------------------------- */
+@keyframes packet-travel {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+.webhook-packet {
+  animation: packet-travel 4.8s cubic-bezier(0.55, 0.1, 0.45, 0.9) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .webhook-packet {
+    display: none;
+  }
+}
+
+/* Marquee ------------------------------------------------------------------ */
+.marquee-track {
+  animation: marquee 48s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
+
+/* Scroll-driven section reveals: zero JavaScript, progressive enhancement.
+   Browsers without scroll timelines simply show the content. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 18%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
