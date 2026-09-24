@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./tests/setup/register-alias.mjs --test \"tests/**/*.test.ts\"",
     "check": "npm run typecheck && npm run lint && npm test",
     "build:static": "node scripts/build-static.mjs"
